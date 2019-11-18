@@ -35,7 +35,7 @@ int main(int argc, char **argv){
 
   auto t2 = clk::now();
   auto diff = duration_cast<microseconds>(t2-t1);
-  cout << "Tiempo de ejecución: " << diff.count() << "seconds" << '\n';
+  cout << "Tiempo de ejecución: " << diff.count() << "microseconds" << '\n';
 
 
 }
@@ -79,31 +79,31 @@ void bigBang(int num_planetas, planeta *planetas, int num_asteroides, asteroide 
     fs << setprecision(3) << asteroides[i].posX << " " << setprecision(3) << asteroides[i].posY << " "<< setprecision(3) << asteroides[i].masa << " "<< "\n";
   }
   int modulo = 0;
-  for (int i = 1; i <= num_planetas;i++){
+  for (int i = 0; i < num_planetas;i++){
     modulo = i%4;
-    if (modulo == 1){
-      planetas[i-1].posX = 0.0;
-      planetas[i-1].posY = ydist(re);
-      planetas[i-1].masa = mdist(re)*10;
-      fs << setprecision(3) << planetas[i-1].posX << " "<< setprecision(3) << planetas[i-1].posY << " " << setprecision(3) << planetas[i-1].masa << "\n";
+    if (modulo == 0){
+      planetas[i].posX = 0.0;
+      planetas[i].posY = ydist(re);
+      planetas[i].masa = mdist(re)*10;
+      fs << setprecision(3) << planetas[i].posX << " "<< setprecision(3) << planetas[i].posY << " " << setprecision(3) << planetas[i].masa << "\n";
+    }
+    else if (modulo == 1){
+      planetas[i].posX = xdist(re);
+      planetas[i].posY = 0.0;
+      planetas[i].masa = mdist(re)*10;
+      fs << setprecision(3) << planetas[i].posX << " "<< setprecision(3) << planetas[i].posY << " " << setprecision(3) << planetas[i].masa << "\n";
     }
     else if (modulo == 2){
-      planetas[i-1].posX = xdist(re);
-      planetas[i-1].posY = 200.0;
-      planetas[i-1].masa = mdist(re)*10;
-      fs << setprecision(3) << planetas[i-1].posX << " "<< setprecision(3) << planetas[i-1].posY << " " << setprecision(3) << planetas[i-1].masa << "\n";
-    }
-    else if (modulo == 3){
-      planetas[i-1].posX = 200.0;
-      planetas[i-1].posY = ydist(re);
-      planetas[i-1].masa = mdist(re)*10;
-      fs << setprecision(3) << planetas[i-1].posX << " "<< setprecision(3) << planetas[i-1].posY << " " << setprecision(3) << planetas[i-1].masa << "\n";
+      planetas[i].posX = 200.0;
+      planetas[i].posY = ydist(re);
+      planetas[i].masa = mdist(re)*10;
+      fs << setprecision(3) << planetas[i].posX << " "<< setprecision(3) << planetas[i].posY << " " << setprecision(3) << planetas[i].masa << "\n";
     }
     else {
-      planetas[i-1].posX = xdist(re);
-      planetas[i-1].posY = 0.0;
-      planetas[i-1].masa = mdist(re)*10;
-      fs << setprecision(3) << planetas[i-1].posX << " "<< setprecision(3) << planetas[i-1].posY << " " << setprecision(3) << planetas[i-1].masa << "\n";
+      planetas[i].posX = xdist(re);
+      planetas[i].posY = 200.0;
+      planetas[i].masa = mdist(re)*10;
+      fs << setprecision(3) << planetas[i].posX << " "<< setprecision(3) << planetas[i].posY << " " << setprecision(3) << planetas[i].masa << "\n";
     }
   }
 }
@@ -131,8 +131,7 @@ void bigBang(int num_planetas, planeta *planetas, int num_asteroides, asteroide 
   }
   while (contador_iteraciones< iteraciones){
     for(int i = 0; i < num_asteroides; i++){
-      fuerzaAsteroideAsteroide[i][i].fuerzaX = 0.0;
-      fuerzaAsteroideAsteroide[i][i].fuerzaY = 0.0;
+
       for(int j = i+1; j < num_asteroides; j++){
           dist = distancia(asteroides[i].posX, asteroides[i].posY, asteroides[j].posX, asteroides[j].posY);
         if(dist > 5.0){
@@ -172,6 +171,10 @@ void bigBang(int num_planetas, planeta *planetas, int num_asteroides, asteroide 
           }
         }
         else{
+          fuerzaAsteroideAsteroide[i][j].fuerzaX=0.0;
+          fuerzaAsteroideAsteroide[i][j].fuerzaY=0.0;
+          fuerzaAsteroideAsteroide[j][i].fuerzaX=0.0;
+          fuerzaAsteroideAsteroide[j][i].fuerzaY=0.0;
           aux = asteroides[i].velX;
           auxVelocidad = asteroides[i].velY;
           asteroides[i].velX = asteroides[j].velX;
@@ -213,8 +216,11 @@ void bigBang(int num_planetas, planeta *planetas, int num_asteroides, asteroide 
       sumatorioFuerzasX = 0.0;
       sumatorioFuerzasY = 0.0;
       for(int j = 0; j < num_asteroides; j++){
-        sumatorioFuerzasX = sumatorioFuerzasX + fuerzaAsteroideAsteroide[i][j].fuerzaX;
-        sumatorioFuerzasY = sumatorioFuerzasY + fuerzaAsteroideAsteroide[i][j].fuerzaY;
+        if(i!=j){
+          sumatorioFuerzasX = sumatorioFuerzasX + fuerzaAsteroideAsteroide[i][j].fuerzaX;
+          sumatorioFuerzasY = sumatorioFuerzasY + fuerzaAsteroideAsteroide[i][j].fuerzaY;
+        }
+
       }
       for(int h = 0; h < num_planetas; h++){
         sumatorioFuerzasX = sumatorioFuerzasX + fuerzaAsteroidePlaneta[i][h].fuerzaX;
