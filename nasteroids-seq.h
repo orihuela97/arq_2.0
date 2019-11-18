@@ -26,6 +26,6 @@ struct fuerza{
 };
 int comprobarParametros(int argc, char **argv);
 void bigBang(int num_planetas, planeta *planetas, int num_asteroides, asteroide *asteroides, int seed, int num_iteraciones);
-void fuerzasEntreAB(asteroide *asteroides, int num_asteroides, planeta *planetas, int num_planetas, int num_iteraciones);
+void movimiento(asteroide *asteroides, int num_asteroides, planeta *planetas, int num_planetas, int num_iteraciones);
 double distancia(double aX, double aY, double bX, double bY);
 void salida(asteroide *asteroides, int num_asteroides);

@@ -26,7 +26,7 @@ int main(int argc, char **argv){
   asteroide *asteroides = new asteroide[num_asteroides];
 
   bigBang(num_planetas,planetas,num_asteroides,asteroides,semilla, num_iteraciones);
-  fuerzasEntreAB(asteroides, num_asteroides, planetas, num_planetas, num_iteraciones);
+  movimiento(asteroides, num_asteroides, planetas, num_planetas, num_iteraciones);
   salida(asteroides, num_asteroides);
   delete [] asteroides;
   delete [] planetas;
@@ -62,7 +62,7 @@ int comprobarParametros(int argc, char **argv){
   }
   return 1;
 }
-void bigBang(int num_planetas, planeta *planetas, int num_asteroides, asteroide *asteroides, int semilla, int num_iteraciones){
+  void bigBang(int num_planetas, planeta *planetas, int num_asteroides, asteroide *asteroides, int semilla, int num_iteraciones){
   default_random_engine re{semilla};
   uniform_real_distribution<double> xdist{0.0,nextafter(GBL_WIDTH,numeric_limits<double>::max())};
   uniform_real_distribution<double> ydist{0.0,nextafter(GBL_HEIGHT,numeric_limits<double>::max())};
@@ -108,7 +108,7 @@ void bigBang(int num_planetas, planeta *planetas, int num_asteroides, asteroide 
   }
 }
 
- void fuerzasEntreAB(asteroide *asteroides, int num_asteroides, planeta *planetas, int num_planetas, int iteraciones){
+ void movimiento(asteroide *asteroides, int num_asteroides, planeta *planetas, int num_planetas, int iteraciones){
   double dist = 0.0;
   double pendiente = 0.0;
   double aux = 0.0;
