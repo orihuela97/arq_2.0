@@ -4,18 +4,20 @@
 #include <iomanip>
 #include <fstream>
 #include <math.h>
-#include <ctime>
-#include <chrono>
 #include <omp.h>
+#include <chrono>
 #include "nasteroids-seq.h"
 using namespace std;
-using namespace std::chrono;//fuerzasPlanetasAsteroides(asteroides[1], planetas[2]);
+using namespace std::chrono;
 
 
 int main(int argc, char **argv){
+  /*using clk = chrono::high_resolution_clock;
+  auto t1 = clk::now();*/
 
-  using clk = chrono::high_resolution_clock;
-  auto t1 = clk::now();
+  double t1=omp_get_wtime();
+
+
   if(comprobarParametros(argc, argv) == -1){
       cout << "nasteroids-seq: Wrong arguments.\nCorrect use:\nnasteroids-seq num_asteroides num_iteraciones num_planetas semilla\n";
   }
@@ -31,12 +33,19 @@ int main(int argc, char **argv){
   salida(asteroides, num_asteroides);
   delete [] asteroides;
   delete [] planetas;
+/*  auto t2 = clk::now();
+  auto diff = duration_cast<seconds>(t2-t1);
+  cout << "Tiempo de ejecución: " << diff.count() << "seconds" << '\n';*/
 
 
 
-  auto t2 = clk::now();
-  auto diff = duration_cast<microseconds>(t2-t1);
-  cout << "Tiempo de ejecución: " << diff.count() << "microseconds" << '\n';
+
+  double t2=omp_get_wtime();
+
+  double diff= t2-t1;
+
+
+  cout << "Tiempo de ejecución: " << setprecision(9) << diff << "seconds" << '\n';
 
 
 }
@@ -121,16 +130,20 @@ int comprobarParametros(int argc, char **argv){
   fuerza fuerzaAsteroidePlaneta[num_asteroides][num_planetas];*/
   fuerza **fuerzaAsteroideAsteroide;
   fuerzaAsteroideAsteroide = new fuerza*[num_asteroides];
+  #pragma omp for
   for(int i=0; i<num_asteroides;i++) {
     fuerzaAsteroideAsteroide[i] = new fuerza[num_asteroides];
   }
 
   fuerza **fuerzaAsteroidePlaneta;
   fuerzaAsteroidePlaneta = new fuerza*[num_asteroides];
+  #pragma omp for
   for(int i=0; i<num_asteroides;i++) {
     fuerzaAsteroidePlaneta[i] = new fuerza[num_planetas];
   }
+
   while (contador_iteraciones< iteraciones){
+
     for(int i = 0; i < num_asteroides; i++){
 
       for(int j = i+1; j < num_asteroides; j++){
@@ -184,6 +197,7 @@ int comprobarParametros(int argc, char **argv){
           asteroides[j].velY = auxVelocidad;
         }
       }
+      #pragma omp for
       for(int h = 0; h<num_planetas; h++){
         dist = distancia(asteroides[i].posX, asteroides[i].posY, planetas[h].posX, planetas[h].posY);
         pendiente = asteroides[i].posY -  planetas[h].posY;
@@ -208,7 +222,9 @@ int comprobarParametros(int argc, char **argv){
     double sumatorioFuerzasY = 0.0;
     double velocidadX = 0.0;
     double velocidadY = 0.0;
-    for (int i = 0; i < num_asteroides; i++){
+    int i;
+
+    for (i = 0; i < num_asteroides; i++){
       aceleracionX = 0.0;
       aceleracionY = 0.0;
       velocidadX = 0.0;
@@ -216,10 +232,12 @@ int comprobarParametros(int argc, char **argv){
       aux = 0.0;
       sumatorioFuerzasX = 0.0;
       sumatorioFuerzasY = 0.0;
+
+
       for(int j = 0; j < num_asteroides; j++){
         if(i!=j){
-          sumatorioFuerzasX = sumatorioFuerzasX + fuerzaAsteroideAsteroide[i][j].fuerzaX;
-          sumatorioFuerzasY = sumatorioFuerzasY + fuerzaAsteroideAsteroide[i][j].fuerzaY;
+          sumatorioFuerzasX += fuerzaAsteroideAsteroide[i][j].fuerzaX;
+          sumatorioFuerzasY += fuerzaAsteroideAsteroide[i][j].fuerzaY;
         }
 
       }

@@ -4,7 +4,6 @@
 #include <iomanip>
 #include <fstream>
 #include <math.h>
-#include <ctime>
 #include <chrono>
 #include "nasteroids-seq.h"
 using namespace std;
@@ -35,7 +34,7 @@ int main(int argc, char **argv){
 
   auto t2 = clk::now();
   auto diff = duration_cast<microseconds>(t2-t1);
-  cout << "Tiempo de ejecución: " << diff.count() << "microseconds" << '\n';
+  cout << "Tiempo de ejecución: "<< setprecision(9) << diff.count() << "microseconds" << '\n';
 
 
 }
