@@ -17,8 +17,6 @@ int main(int argc, char **argv){
 
   double t1=omp_get_wtime();
 
-  #pragma omp parallel
-  {
 
   if(comprobarParametros(argc, argv) == -1){
       cout << "nasteroids-seq: Wrong arguments.\nCorrect use:\nnasteroids-seq num_asteroides num_iteraciones num_planetas semilla\n";
@@ -38,7 +36,7 @@ int main(int argc, char **argv){
 /*  auto t2 = clk::now();
   auto diff = duration_cast<seconds>(t2-t1);
   cout << "Tiempo de ejecución: " << diff.count() << "seconds" << '\n';*/
-  }
+
 
 
   double t2=omp_get_wtime();
