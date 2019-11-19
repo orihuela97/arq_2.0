@@ -17,29 +17,25 @@ int main(int argc, char **argv){
 
   double t1=omp_get_wtime();
 
-  #pragma omp parallel
-  {
-  if(comprobarParametros(argc, argv) == -1){
-      cout << "nasteroids-seq: Wrong arguments.\nCorrect use:\nnasteroids-seq num_asteroides num_iteraciones num_planetas semilla\n";
-  }
-  const int num_asteroides = atoi(argv[1]);
-  const int num_iteraciones = atoi(argv[2]);
-  const int num_planetas = atoi(argv[3]);
-  int semilla = atoi(argv[4]);
-  planeta *planetas = new planeta[num_planetas];
-  asteroide *asteroides = new asteroide[num_asteroides];
 
-  bigBang(num_planetas,planetas,num_asteroides,asteroides,semilla, num_iteraciones);
-  movimiento(asteroides, num_asteroides, planetas, num_planetas, num_iteraciones);
-  salida(asteroides, num_asteroides);
-  delete [] asteroides;
-  delete [] planetas;
-/*  auto t2 = clk::now();
-  auto diff = duration_cast<seconds>(t2-t1);
-  cout << "Tiempo de ejecución: " << diff.count() << "seconds" << '\n';*/
+    if(comprobarParametros(argc, argv) == -1){
+        cout << "nasteroids-seq: Wrong arguments.\nCorrect use:\nnasteroids-seq num_asteroides num_iteraciones num_planetas semilla\n";
+    }
+    const int num_asteroides = atoi(argv[1]);
+    const int num_iteraciones = atoi(argv[2]);
+    const int num_planetas = atoi(argv[3]);
+    int semilla = atoi(argv[4]);
+    planeta *planetas = new planeta[num_planetas];
+    asteroide *asteroides = new asteroide[num_asteroides];
+
+    bigBang(num_planetas,planetas,num_asteroides,asteroides,semilla, num_iteraciones);
+    movimiento(asteroides, num_asteroides, planetas, num_planetas, num_iteraciones);
+    salida(asteroides, num_asteroides);
+    delete [] asteroides;
+    delete [] planetas;
 
 
-  }
+
 
   double t2=omp_get_wtime();
 
@@ -78,10 +74,13 @@ int comprobarParametros(int argc, char **argv){
   uniform_real_distribution<double> xdist{0.0,nextafter(GBL_WIDTH,numeric_limits<double>::max())};
   uniform_real_distribution<double> ydist{0.0,nextafter(GBL_HEIGHT,numeric_limits<double>::max())};
   normal_distribution<double> mdist{GBL_MASA, GBL_SDM};
-  ofstream fs("init_conf.txt");
+  ofstream fs("init_conf1.txt");
   fs << num_asteroides << " " << num_iteraciones << " " << num_planetas << " " << semilla << "\n";
   fs << fixed;
+
+
   for (int i = 0; i < num_asteroides;i++){
+    //std::cout << "Iteracion: " << i <<  "Hilo: "<<  omp_get_thread_num()<<'\n';
     asteroides[i].posX = xdist(re);
     asteroides[i].posY = ydist(re);
     asteroides[i].masa = mdist(re);
@@ -89,6 +88,7 @@ int comprobarParametros(int argc, char **argv){
     asteroides[i].velY = 0.0;
     fs << setprecision(3) << asteroides[i].posX << " " << setprecision(3) << asteroides[i].posY << " "<< setprecision(3) << asteroides[i].masa << " "<< "\n";
   }
+
   int modulo = 0;
   for (int i = 0; i < num_planetas;i++){
     modulo = i%4;
@@ -131,24 +131,30 @@ int comprobarParametros(int argc, char **argv){
   fuerza fuerzaAsteroidePlaneta[num_asteroides][num_planetas];*/
   fuerza **fuerzaAsteroideAsteroide;
   fuerzaAsteroideAsteroide = new fuerza*[num_asteroides];
-  #pragma omp for
-  for(int i=0; i<num_asteroides;i++) {
-    fuerzaAsteroideAsteroide[i] = new fuerza[num_asteroides];
-  }
-
   fuerza **fuerzaAsteroidePlaneta;
   fuerzaAsteroidePlaneta = new fuerza*[num_asteroides];
-  #pragma omp for
-  for(int i=0; i<num_asteroides;i++) {
-    fuerzaAsteroidePlaneta[i] = new fuerza[num_planetas];
+
+  #pragma omp parallel
+  {
+      #pragma omp for
+      for(int i=0; i<num_asteroides;i++) {
+        fuerzaAsteroideAsteroide[i] = new fuerza[num_asteroides];
+      }
+
+      #pragma omp for
+      for(int i=0; i<num_asteroides;i++) {
+        fuerzaAsteroidePlaneta[i] = new fuerza[num_planetas];
+      }
   }
 
-  while (contador_iteraciones< iteraciones){
+  while (contador_iteraciones < iteraciones){
 
     for(int i = 0; i < num_asteroides; i++){
 
+
       for(int j = i+1; j < num_asteroides; j++){
           dist = distancia(asteroides[i].posX, asteroides[i].posY, asteroides[j].posX, asteroides[j].posY);
+
         if(dist > 5.0){
           pendiente = asteroides[i].posY - asteroides[j].posY;
           aux = asteroides[i].posX - asteroides[j].posX;
@@ -198,7 +204,7 @@ int comprobarParametros(int argc, char **argv){
           asteroides[j].velY = auxVelocidad;
         }
       }
-      #pragma omp for
+
       for(int h = 0; h<num_planetas; h++){
         dist = distancia(asteroides[i].posX, asteroides[i].posY, planetas[h].posX, planetas[h].posY);
         pendiente = asteroides[i].posY -  planetas[h].posY;
@@ -217,15 +223,20 @@ int comprobarParametros(int argc, char **argv){
         fuerzaAsteroidePlaneta[i][h].fuerzaY = fuerzas * sin(angulo);
       }
     }
+
+
+
     double aceleracionX = 0.0;
     double aceleracionY = 0.0;
     double sumatorioFuerzasX = 0.0;
     double sumatorioFuerzasY = 0.0;
     double velocidadX = 0.0;
     double velocidadY = 0.0;
-    int i;
-
-    for (i = 0; i < num_asteroides; i++){
+    double x;
+    double y;
+    #pragma omp parallel
+    {
+    for (int i = 0; i < num_asteroides; i++){
       aceleracionX = 0.0;
       aceleracionY = 0.0;
       velocidadX = 0.0;
@@ -234,17 +245,26 @@ int comprobarParametros(int argc, char **argv){
       sumatorioFuerzasX = 0.0;
       sumatorioFuerzasY = 0.0;
 
+          #pragma omp for ordered reduction(+:sumatorioFuerzasX) reduction(+:sumatorioFuerzasY)
+          for(int j = 0; j < num_asteroides; j++){
+            if(i!=j){
+              x = fuerzaAsteroideAsteroide[i][j].fuerzaX;
+              y = fuerzaAsteroideAsteroide[i][j].fuerzaY;
+              #pragma omp ordered
+              sumatorioFuerzasX += x;
+              sumatorioFuerzasY += y;
+            }
 
-      for(int j = 0; j < num_asteroides; j++){
-        if(i!=j){
-          sumatorioFuerzasX += fuerzaAsteroideAsteroide[i][j].fuerzaX;
-          sumatorioFuerzasY += fuerzaAsteroideAsteroide[i][j].fuerzaY;
-        }
+          }
+          #pragma omp for ordered reduction(+:sumatorioFuerzasX) reduction(+:sumatorioFuerzasY)
+          for(int h = 0; h < num_planetas; h++){
+            x = fuerzaAsteroidePlaneta[i][h].fuerzaX;
+            y = fuerzaAsteroidePlaneta[i][h].fuerzaY;
+            #pragma omp ordered
+            sumatorioFuerzasX += x;
+            sumatorioFuerzasY += y;
+          }
 
-      }
-      for(int h = 0; h < num_planetas; h++){
-        sumatorioFuerzasX = sumatorioFuerzasX + fuerzaAsteroidePlaneta[i][h].fuerzaX;
-        sumatorioFuerzasY = sumatorioFuerzasY + fuerzaAsteroidePlaneta[i][h].fuerzaY;
       }
 
       aux = 1/asteroides[i].masa;
@@ -252,34 +272,36 @@ int comprobarParametros(int argc, char **argv){
 
       aceleracionY = aux*sumatorioFuerzasY;
       velocidadX = aceleracionX * GBL_ITIME;
-      //velocidadX = asteroides[i].velX + velocidadX;
-      asteroides[i].velX = asteroides[i].velX + velocidadX;
+
+      asteroides[i].velX += velocidadX;
       velocidadY = aceleracionY * GBL_ITIME;
-      //velocidadY = asteroides[i].velY + velocidadY;
-      asteroides[i].velY = asteroides[i].velY + velocidadY;
+
+      asteroides[i].velY += velocidadY;
       aux = asteroides[i].velX * GBL_ITIME;
-      aux = aux + asteroides[i].posX;
+      aux += asteroides[i].posX;
       asteroides[i].posX = aux;
       aux = asteroides[i].velY * GBL_ITIME;
-      aux = aux + asteroides[i].posY;
+      aux += asteroides[i].posY;
       asteroides[i].posY = aux;
+
       if (asteroides[i].posX <= 0.0){
         asteroides[i].posX = 5.0;
-        asteroides[i].velX = asteroides[i].velX * -1.0;
+        asteroides[i].velX *= -1.0;
       }
       if (asteroides[i].posY <= 0.0){
         asteroides[i].posY = 5.0;
-        asteroides[i].velY = asteroides[i].velY * -1.0;
+        asteroides[i].velY *= -1.0;
       }
       if (asteroides[i].posX >= GBL_WIDTH){
         asteroides[i].posX = GBL_WIDTH - 5.0;
-        asteroides[i].velX = asteroides[i].velX * -1.0;
+        asteroides[i].velX *= -1.0;
       }
       if (asteroides[i].posY >= GBL_HEIGHT){
         asteroides[i].posY = GBL_HEIGHT - 5.0;
-        asteroides[i].velY = asteroides[i].velY * -1.0;
+        asteroides[i].velY *= -1.0;
       }
      }
+
      contador_iteraciones++;
   }
   for (int i = 0; i < num_asteroides; i++) {
@@ -311,7 +333,7 @@ int comprobarParametros(int argc, char **argv){
    return dist;
   }
  void salida(asteroide *asteroides, int num_asteroides){
-   ofstream fs("out.txt");
+   ofstream fs("out1.txt");
    fs << fixed;
    for (int i = 0; i < num_asteroides; i++){
      fs << setprecision(3) << asteroides[i].posX << " " << setprecision(3) << asteroides[i].posY << " " << setprecision(3) << asteroides[i].velX << " " << setprecision(3) << asteroides[i].velY << " " << setprecision(3) << asteroides[i].masa << "\n";
