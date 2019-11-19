@@ -10,8 +10,8 @@
 #define NT 4
 using namespace std;
 using namespace std::chrono;
-
-
+void calcFuerza(int i,asteroide *asteroides,planeta *planetas,fuerza **fuerzaAsteroideAsteroide,fuerza **fuerzaAsteroidePlaneta,int num_asteroides,int num_planetas);
+ void calcNewPosVel(int i,asteroide *asteroides,fuerza  **fuerzaAsteroideAsteroide,fuerza **fuerzaAsteroidePlaneta,int num_asteroides,int num_planetas);
 int main(int argc, char **argv){
   /*using clk = chrono::high_resolution_clock;
   auto t1 = clk::now();*/
@@ -121,12 +121,10 @@ int comprobarParametros(int argc, char **argv){
 }
 
  void movimiento(asteroide *asteroides, int num_asteroides, planeta *planetas, int num_planetas, int iteraciones){
-  double dist = 0.0;
-  double pendiente = 0.0;
-  double aux = 0.0;
-  double angulo = 0.0;
-  double fuerzas = 0.0;
-  double auxVelocidad = 0.0;
+
+
+
+
   int contador_iteraciones = 0;
   /*fuerza fuerzaAsteroideAsteroide[num_asteroides][num_asteroides];
   fuerza fuerzaAsteroidePlaneta[num_asteroides][num_planetas];*/
@@ -135,163 +133,33 @@ int comprobarParametros(int argc, char **argv){
   fuerza **fuerzaAsteroidePlaneta;
   fuerzaAsteroidePlaneta = new fuerza*[num_asteroides];
 
-  #pragma omp parallel
-  {
-      #pragma omp for
+
       for(int i=0; i<num_asteroides;i++) {
         fuerzaAsteroideAsteroide[i] = new fuerza[num_asteroides];
       }
 
-      #pragma omp for
+
       for(int i=0; i<num_asteroides;i++) {
         fuerzaAsteroidePlaneta[i] = new fuerza[num_planetas];
       }
-  }
 
-  while (contador_iteraciones < iteraciones){
+
+
+  for(contador_iteraciones= 0; contador_iteraciones < iteraciones; contador_iteraciones++){
     #pragma omp parallel
     #pragma omp for schedule(dynamic)
     for(int i = 0; i < num_asteroides; i++){
 
+      calcFuerza(i,asteroides,planetas,fuerzaAsteroideAsteroide,fuerzaAsteroidePlaneta,num_asteroides,num_planetas);
 
-      for(int j = i+1; j < num_asteroides; j++){
-          dist = distancia(asteroides[i].posX, asteroides[i].posY, asteroides[j].posX, asteroides[j].posY);
-
-        if(dist > 5.0){
-          pendiente = asteroides[i].posY - asteroides[j].posY;
-          aux = asteroides[i].posX - asteroides[j].posX;
-          pendiente = pendiente / aux;
-          if(pendiente > 1.0){
-            pendiente = 1.0;
-          }else if(pendiente < -1.0){
-            pendiente = -1.0;
-          }
-          angulo = atan(pendiente);
-
-          fuerzas = GBL_GRAVITY * asteroides[i].masa * asteroides[j].masa;
-          aux = dist * dist;
-          fuerzas = fuerzas / aux;
-          fuerzaAsteroideAsteroide[i][j].fuerzaX = fuerzas * cos(angulo);
-          fuerzaAsteroideAsteroide[j][i].fuerzaX = -(fuerzas * cos(angulo));
-          if(fuerzaAsteroideAsteroide[i][j].fuerzaX > 100.0){
-            fuerzaAsteroideAsteroide[i][j].fuerzaX = 100.0;
-            fuerzaAsteroideAsteroide[j][i].fuerzaX = -100.0;
-          }
-          if(fuerzaAsteroideAsteroide[j][i].fuerzaX > 100.0){
-            fuerzaAsteroideAsteroide[j][i].fuerzaX = -100.0;
-            fuerzaAsteroideAsteroide[i][j].fuerzaX = 100.0;
-          }
-
-          fuerzaAsteroideAsteroide[i][j].fuerzaY = fuerzas * sin(angulo);
-          fuerzaAsteroideAsteroide[j][i].fuerzaY = -(fuerzas * sin(angulo));
-          if(fuerzaAsteroideAsteroide[i][j].fuerzaY > 100.0){
-            fuerzaAsteroideAsteroide[i][j].fuerzaY = 100.0;
-            fuerzaAsteroideAsteroide[j][i].fuerzaY = -100.0;
-          }
-          if(fuerzaAsteroideAsteroide[j][i].fuerzaY > 100.0){
-            fuerzaAsteroideAsteroide[j][i].fuerzaY = -100.0;
-            fuerzaAsteroideAsteroide[i][j].fuerzaY = 100.0;
-          }
-        }
-        else{
-          fuerzaAsteroideAsteroide[i][j].fuerzaX=0.0;
-          fuerzaAsteroideAsteroide[i][j].fuerzaY=0.0;
-          fuerzaAsteroideAsteroide[j][i].fuerzaX=0.0;
-          fuerzaAsteroideAsteroide[j][i].fuerzaY=0.0;
-          aux = asteroides[i].velX;
-          auxVelocidad = asteroides[i].velY;
-          asteroides[i].velX = asteroides[j].velX;
-          asteroides[i].velY = asteroides[j].velY;
-          asteroides[j].velX = aux;
-          asteroides[j].velY = auxVelocidad;
-        }
-      }
-
-      for(int h = 0; h<num_planetas; h++){
-        dist = distancia(asteroides[i].posX, asteroides[i].posY, planetas[h].posX, planetas[h].posY);
-        pendiente = asteroides[i].posY -  planetas[h].posY;
-        aux = asteroides[i].posX -  planetas[h].posX;
-        pendiente = pendiente / aux;
-        if(pendiente > 1.0){
-          pendiente = 1.0;
-        }else if(pendiente < -1.0){
-          pendiente = -1.0;
-        }
-        angulo = atan(pendiente);
-        fuerzas = GBL_GRAVITY * asteroides[i].masa *  planetas[h].masa;
-        aux = dist * dist;
-        fuerzas = fuerzas / aux;
-        fuerzaAsteroidePlaneta[i][h].fuerzaX = fuerzas * cos(angulo);
-        fuerzaAsteroidePlaneta[i][h].fuerzaY = fuerzas * sin(angulo);
-      }
     }
-
-
-
-    double aceleracionX = 0.0;
-    double aceleracionY = 0.0;
-    double sumatorioFuerzasX = 0.0;
-    double sumatorioFuerzasY = 0.0;
-    double velocidadX = 0.0;
-    double velocidadY = 0.0;
 
     #pragma omp for schedule(dynamic)
     for (int i = 0; i < num_asteroides; i++){
-      aceleracionX = 0.0;
-      aceleracionY = 0.0;
-      velocidadX = 0.0;
-      velocidadY = 0.0;
-      aux = 0.0;
-      sumatorioFuerzasX = 0.0;
-      sumatorioFuerzasY = 0.0;
 
-
-      for(int j = 0; j < num_asteroides; j++){
-        if(i!=j){
-          sumatorioFuerzasX += fuerzaAsteroideAsteroide[i][j].fuerzaX;
-          sumatorioFuerzasY += fuerzaAsteroideAsteroide[i][j].fuerzaY;
-        }
-
-      }
-      for(int h = 0; h < num_planetas; h++){
-        sumatorioFuerzasX = sumatorioFuerzasX + fuerzaAsteroidePlaneta[i][h].fuerzaX;
-        sumatorioFuerzasY = sumatorioFuerzasY + fuerzaAsteroidePlaneta[i][h].fuerzaY;
-      }
-
-      aux = 1/asteroides[i].masa;
-      aceleracionX = aux*sumatorioFuerzasX;
-
-      aceleracionY = aux*sumatorioFuerzasY;
-      velocidadX = aceleracionX * GBL_ITIME;
-      //velocidadX = asteroides[i].velX + velocidadX;
-      asteroides[i].velX = asteroides[i].velX + velocidadX;
-      velocidadY = aceleracionY * GBL_ITIME;
-      //velocidadY = asteroides[i].velY + velocidadY;
-      asteroides[i].velY = asteroides[i].velY + velocidadY;
-      aux = asteroides[i].velX * GBL_ITIME;
-      aux = aux + asteroides[i].posX;
-      asteroides[i].posX = aux;
-      aux = asteroides[i].velY * GBL_ITIME;
-      aux = aux + asteroides[i].posY;
-      asteroides[i].posY = aux;
-      if (asteroides[i].posX <= 0.0){
-        asteroides[i].posX = 5.0;
-        asteroides[i].velX = asteroides[i].velX * -1.0;
-      }
-      if (asteroides[i].posY <= 0.0){
-        asteroides[i].posY = 5.0;
-        asteroides[i].velY = asteroides[i].velY * -1.0;
-      }
-      if (asteroides[i].posX >= GBL_WIDTH){
-        asteroides[i].posX = GBL_WIDTH - 5.0;
-        asteroides[i].velX = asteroides[i].velX * -1.0;
-      }
-      if (asteroides[i].posY >= GBL_HEIGHT){
-        asteroides[i].posY = GBL_HEIGHT - 5.0;
-        asteroides[i].velY = asteroides[i].velY * -1.0;
-      }
+        calcNewPosVel(i,asteroides,fuerzaAsteroideAsteroide,fuerzaAsteroidePlaneta,num_asteroides,num_planetas);
      }
-     contador_iteraciones++;
+     //contador_iteraciones++;
   }
   for (int i = 0; i < num_asteroides; i++) {
         delete [] fuerzaAsteroideAsteroide[i];
@@ -326,5 +194,142 @@ int comprobarParametros(int argc, char **argv){
    fs << fixed;
    for (int i = 0; i < num_asteroides; i++){
      fs << setprecision(3) << asteroides[i].posX << " " << setprecision(3) << asteroides[i].posY << " " << setprecision(3) << asteroides[i].velX << " " << setprecision(3) << asteroides[i].velY << " " << setprecision(3) << asteroides[i].masa << "\n";
+   }
+ }
+ void calcFuerza(int i,asteroide *asteroides,planeta *planetas,fuerza **fuerzaAsteroideAsteroide,fuerza **fuerzaAsteroidePlaneta,int num_asteroides,int num_planetas){
+   double dist = 0.0;
+   double pendiente = 0.0;
+   double aux = 0.0;
+   double angulo = 0.0;
+   double fuerzas = 0.0;
+   double auxVelocidad = 0.0;
+
+   for(int j = i+1; j < num_asteroides; j++){
+
+       dist = distancia(asteroides[i].posX, asteroides[i].posY, asteroides[j].posX, asteroides[j].posY);
+
+     if(dist > 5.0){
+       pendiente = asteroides[i].posY - asteroides[j].posY;
+       aux = asteroides[i].posX - asteroides[j].posX;
+       pendiente = pendiente / aux;
+       if(pendiente > 1.0){
+         pendiente = 1.0;
+       }else if(pendiente < -1.0){
+         pendiente = -1.0;
+       }
+       angulo = atan(pendiente);
+
+       fuerzas = GBL_GRAVITY * asteroides[i].masa * asteroides[j].masa;
+       aux = dist * dist;
+       fuerzas = fuerzas / aux;
+
+       fuerzaAsteroideAsteroide[i][j].fuerzaX = fuerzas * cos(angulo);
+       fuerzaAsteroideAsteroide[j][i].fuerzaX = -(fuerzas * cos(angulo));
+       if(fuerzaAsteroideAsteroide[i][j].fuerzaX > 100.0){
+         fuerzaAsteroideAsteroide[i][j].fuerzaX = 100.0;
+         fuerzaAsteroideAsteroide[j][i].fuerzaX = -100.0;
+       }
+       if(fuerzaAsteroideAsteroide[j][i].fuerzaX > 100.0){
+         fuerzaAsteroideAsteroide[j][i].fuerzaX = -100.0;
+         fuerzaAsteroideAsteroide[i][j].fuerzaX = 100.0;
+       }
+
+       fuerzaAsteroideAsteroide[i][j].fuerzaY = fuerzas * sin(angulo);
+       fuerzaAsteroideAsteroide[j][i].fuerzaY = -(fuerzas * sin(angulo));
+       if(fuerzaAsteroideAsteroide[i][j].fuerzaY > 100.0){
+         fuerzaAsteroideAsteroide[i][j].fuerzaY = 100.0;
+         fuerzaAsteroideAsteroide[j][i].fuerzaY = -100.0;
+       }
+       if(fuerzaAsteroideAsteroide[j][i].fuerzaY > 100.0){
+         fuerzaAsteroideAsteroide[j][i].fuerzaY = -100.0;
+         fuerzaAsteroideAsteroide[i][j].fuerzaY = 100.0;
+       }
+     }
+     else{
+       fuerzaAsteroideAsteroide[i][j].fuerzaX=0.0;
+       fuerzaAsteroideAsteroide[i][j].fuerzaY=0.0;
+       fuerzaAsteroideAsteroide[j][i].fuerzaX=0.0;
+       fuerzaAsteroideAsteroide[j][i].fuerzaY=0.0;
+       aux = asteroides[i].velX;
+       auxVelocidad = asteroides[i].velY;
+       asteroides[i].velX = asteroides[j].velX;
+       asteroides[i].velY = asteroides[j].velY;
+       asteroides[j].velX = aux;
+       asteroides[j].velY = auxVelocidad;
+     }
+   }
+
+   for(int h = 0; h<num_planetas; h++){
+     dist = distancia(asteroides[i].posX, asteroides[i].posY, planetas[h].posX, planetas[h].posY);
+     pendiente = asteroides[i].posY -  planetas[h].posY;
+     aux = asteroides[i].posX -  planetas[h].posX;
+     pendiente = pendiente / aux;
+     if(pendiente > 1.0){
+       pendiente = 1.0;
+     }else if(pendiente < -1.0){
+       pendiente = -1.0;
+     }
+     angulo = atan(pendiente);
+     fuerzas = GBL_GRAVITY * asteroides[i].masa *  planetas[h].masa;
+     aux = dist * dist;
+     fuerzas = fuerzas / aux;
+
+     fuerzaAsteroidePlaneta[i][h].fuerzaX = fuerzas * cos(angulo);
+     fuerzaAsteroidePlaneta[i][h].fuerzaY = fuerzas * sin(angulo);
+   }
+ }
+ void calcNewPosVel(int i,asteroide *asteroides,fuerza  **fuerzaAsteroideAsteroide,fuerza **fuerzaAsteroidePlaneta,int num_asteroides,int num_planetas){
+   double aux = 0.0;
+   double aceleracionX = 0.0;
+   double aceleracionY = 0.0;
+   double velocidadX = 0.0;
+   double velocidadY = 0.0;
+   double sumatorioFuerzasX = 0.0;
+   double sumatorioFuerzasY = 0.0;
+
+
+   for(int j = 0; j < num_asteroides; j++){
+     if(i!=j){
+       sumatorioFuerzasX += fuerzaAsteroideAsteroide[i][j].fuerzaX;
+       sumatorioFuerzasY += fuerzaAsteroideAsteroide[i][j].fuerzaY;
+     }
+
+   }
+   for(int h = 0; h < num_planetas; h++){
+     sumatorioFuerzasX = sumatorioFuerzasX + fuerzaAsteroidePlaneta[i][h].fuerzaX;
+     sumatorioFuerzasY = sumatorioFuerzasY + fuerzaAsteroidePlaneta[i][h].fuerzaY;
+   }
+
+   aux = 1/asteroides[i].masa;
+   aceleracionX = aux*sumatorioFuerzasX;
+
+   aceleracionY = aux*sumatorioFuerzasY;
+   velocidadX = aceleracionX * GBL_ITIME;
+   //velocidadX = asteroides[i].velX + velocidadX;
+   asteroides[i].velX = asteroides[i].velX + velocidadX;
+   velocidadY = aceleracionY * GBL_ITIME;
+   //velocidadY = asteroides[i].velY + velocidadY;
+   asteroides[i].velY = asteroides[i].velY + velocidadY;
+   aux = asteroides[i].velX * GBL_ITIME;
+   aux = aux + asteroides[i].posX;
+   asteroides[i].posX = aux;
+   aux = asteroides[i].velY * GBL_ITIME;
+   aux = aux + asteroides[i].posY;
+   asteroides[i].posY = aux;
+   if (asteroides[i].posX <= 0.0){
+     asteroides[i].posX = 5.0;
+     asteroides[i].velX = asteroides[i].velX * -1.0;
+   }
+   if (asteroides[i].posY <= 0.0){
+     asteroides[i].posY = 5.0;
+     asteroides[i].velY = asteroides[i].velY * -1.0;
+   }
+   if (asteroides[i].posX >= GBL_WIDTH){
+     asteroides[i].posX = GBL_WIDTH - 5.0;
+     asteroides[i].velX = asteroides[i].velX * -1.0;
+   }
+   if (asteroides[i].posY >= GBL_HEIGHT){
+     asteroides[i].posY = GBL_HEIGHT - 5.0;
+     asteroides[i].velY = asteroides[i].velY * -1.0;
    }
  }
