@@ -149,16 +149,8 @@ int comprobarParametros(int argc, char **argv){
       for(int j = i+1; j < num_asteroides; j++){
           dist = distancia(asteroides[i].posX, asteroides[i].posY, asteroides[j].posX, asteroides[j].posY);
         if(dist > 5.0){
-          pendiente = asteroides[i].posY - asteroides[j].posY;
-          aux = asteroides[i].posX - asteroides[j].posX;
-          pendiente = pendiente / aux;
-          if(pendiente > 1.0){
-            pendiente = 1.0;
-          }else if(pendiente < -1.0){
-            pendiente = -1.0;
-          }
-          angulo = atan(pendiente);
-
+          pendiente = pendient(asteroides[i], asteroides[j]);
+          angulo = calcAngulo(pendiente);
           fuerzas = GBL_GRAVITY * asteroides[i].masa * asteroides[j].masa;
           aux = dist * dist;
           fuerzas = fuerzas / aux;
@@ -315,4 +307,22 @@ int comprobarParametros(int argc, char **argv){
    for (int i = 0; i < num_asteroides; i++){
      fs << setprecision(3) << asteroides[i].posX << " " << setprecision(3) << asteroides[i].posY << " " << setprecision(3) << asteroides[i].velX << " " << setprecision(3) << asteroides[i].velY << " " << setprecision(3) << asteroides[i].masa << "\n";
    }
+ }
+ double pendient(asteroide a, asteroide b){
+   double pendiente = 0.0;
+   double aux = 0.0;
+   pendiente = a.posY - b.posY;
+   aux = asteroides[i].posX - asteroides[j].posX;
+   pendiente = pendiente / aux;
+   if(pendiente > 1.0){
+     pendiente = 1.0;
+   }else if(pendiente < -1.0){
+     pendiente = -1.0;
+   }
+   return pendiente;
+ }
+ double calcAngulo(double pendiente){
+   double angulo = 0.0;
+   angulo = atan(pendiente);
+   return angulo;
  }
