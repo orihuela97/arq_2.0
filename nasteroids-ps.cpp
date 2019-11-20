@@ -12,10 +12,10 @@ using namespace std::chrono;
 
 
 int main(int argc, char **argv){
-  /*using clk = chrono::high_resolution_clock;
-  auto t1 = clk::now();*/
+  using clk = chrono::high_resolution_clock;
+  auto t1 = clk::now();
 
-  double t1=omp_get_wtime();
+  //double t1=omp_get_wtime();
 
 
   if(comprobarParametros(argc, argv) == -1){
@@ -33,19 +33,19 @@ int main(int argc, char **argv){
   salida(asteroides, num_asteroides);
   delete [] asteroides;
   delete [] planetas;
-/*  auto t2 = clk::now();
+  auto t2 = clk::now();
   auto diff = duration_cast<seconds>(t2-t1);
-  cout << "Tiempo de ejecución: " << diff.count() << "seconds" << '\n';*/
+  cout << "Tiempo de ejecución: " << diff.count() << "seconds" << '\n';
 
 
 
 
-  double t2=omp_get_wtime();
+  /*double t2=omp_get_wtime();
 
   double diff= t2-t1;
 
 
-  cout << "Tiempo de ejecución: " << setprecision(9) << diff << "seconds" << '\n';
+  cout << "Tiempo de ejecución: " << setprecision(9) << diff << "seconds" << '\n';*/
 
 
 }
@@ -127,21 +127,20 @@ int comprobarParametros(int argc, char **argv){
   fuerza fuerzaAsteroidePlaneta[num_asteroides][num_planetas];*/
   fuerza **fuerzaAsteroideAsteroide;
   fuerzaAsteroideAsteroide = new fuerza*[num_asteroides];
-  #pragma omp for
+
   for(int i=0; i<num_asteroides;i++) {
     fuerzaAsteroideAsteroide[i] = new fuerza[num_asteroides];
   }
 
   fuerza **fuerzaAsteroidePlaneta;
   fuerzaAsteroidePlaneta = new fuerza*[num_asteroides];
-  #pragma omp for
+
   for(int i=0; i<num_asteroides;i++) {
     fuerzaAsteroidePlaneta[i] = new fuerza[num_planetas];
   }
 
   while (contador_iteraciones< iteraciones){
-    #pragma omp parallel
-    #pragma omp for schedule(dynamic)
+
     for(int i = 0; i < num_asteroides; i++){
 
       for(int j = i+1; j < num_asteroides; j++){
@@ -165,7 +164,7 @@ int comprobarParametros(int argc, char **argv){
     }
     double sumatorioFuerzasX = 0.0;
     double sumatorioFuerzasY = 0.0;
-    #pragma omp for schedule(dynamic)
+
     for (int i = 0; i < num_asteroides; i++){
       sumatorioFuerzasX = 0.0;
       sumatorioFuerzasY = 0.0;
@@ -213,7 +212,7 @@ int comprobarParametros(int argc, char **argv){
    return dist;
   }
  void salida(asteroide *asteroides, int num_asteroides){
-   ofstream fs("out1.txt");
+   ofstream fs("out2.txt");
    fs << fixed;
    for (int i = 0; i < num_asteroides; i++){
      fs << setprecision(3) << asteroides[i].posX << " " << setprecision(3) << asteroides[i].posY << " " << setprecision(3) << asteroides[i].velX << " " << setprecision(3) << asteroides[i].velY << " " << setprecision(3) << asteroides[i].masa << "\n";
